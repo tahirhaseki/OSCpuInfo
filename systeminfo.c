@@ -75,19 +75,19 @@ void cpuinfo(void){
     char *end;
 	int counter;
 
+	printk("CPU Information:\n");
     // Create and open the file in user space
     f = file_open("/proc/cpuinfo", O_CREAT |  O_RDWR | O_APPEND, \
                                 		S_IRWXU | S_IRWXG | S_IRWXO);
     file_read(f,0,in,500);
-    printk("file = %s\n",in);
-    printk("end\n");
+
 
 	counter = 0;
     tok = in;
     end = in;
     while (counter < 7){
 		strsep(&end,"\n");
-		if(counter != 3 && counter != 5){
+		if(counter != 3 && counter != 5 && counter != 0){
 			printk("xx| %s\n",tok);
 		}
 		tok = end;
@@ -96,15 +96,118 @@ void cpuinfo(void){
     file_close(f);
 }
 
-static int __init file_init(void) { 
+void param1(char* pid){
+    char in[500];
+    char *tok;
+    char *end;
+	int counter;
+	char fp[50] = "";
+
+	strncat(fp,"/proc/",strnlen("/proc/",10));
+	strncat(fp,pid,strnlen(pid,8));
+	strncat(fp,"/status",strnlen("/status",10));
+
+	printk("Process Information:\n");
+    // Create and open the file in user space
+    f = file_open(fp, O_CREAT |  O_RDWR | O_APPEND, \
+                                		S_IRWXU | S_IRWXG | S_IRWXO);
+    file_read(f,0,in,500);
+
+	counter = 0;
+    tok = in;
+    end = in;
+    while (counter < 9){
+		strsep(&end,"\n");
+		if(counter != 1 && counter != 3 && counter != 4 && counter != 7) {
+			printk("xx| %s\n",tok);
+		}
+		tok = end;
+		counter++;
+    }
+    file_close(f);
+}
+
+void param2(void){
+    char in[100];
+    char *tok;
+    char *end;
+	int counter;
+	char *task = vmalloc(15);
+
+
+	printk("System Statistics:\n");
+    // Create and open the file in user space
+    f = file_open("/proc/uptime", O_CREAT |  O_RDWR | O_APPEND, \
+                                		S_IRWXU | S_IRWXG | S_IRWXO);
+    file_read(f,0,in,100);
+
+	counter = 0;
+    tok = in;
+    end = in;
+    while (counter < 2){
+		if(counter == 0) {
+			strsep(&end," ");
+			printk("system was booted since : %s\n",tok);
+		}
+		else {
+			strsep(&end,"\n");
+			printk("system has been idle since : %s\n",tok);
+		}
+		tok = end;
+		counter++;
+    }
+    file_close(f);
+	strncpy(in,"",strnlen("",1));
+	strncpy(tok,"",strnlen("",1));
+	strncpy(end,"",strnlen("",1));
+
+    f = file_open("/proc/loadavg", O_CREAT |  O_RDWR | O_APPEND, \
+                                		S_IRWXU | S_IRWXG | S_IRWXO);
+    file_read(f,0,in,100);
+
+	counter = 0;
+    tok = in;
+    end = in;
+    while (counter < 5){
+		strsep(&end," ");
+		if(counter == 3) {
+			strcpy(task,tok);
+		}
+		tok = end;
+		counter++;
+    }
+	tok = task;
+	end = task;
+	strsep(&end,"/");
+	printk("the number of active tasks : %s\n",tok);
+	tok = end;
+	strsep(&end,"/");
+	printk("the total number of processes : %s\n",tok);
+    file_close(f);
+}
+
+SYSCALL_DEFINE2(sys_test,int,choice,char*,pid) { 
 	cpuinfo();
+	if(choice == 0){
+		if(strncmp(pid,"0",1) == 0){
+			// -all only
+			param2();
+		}
+		else {
+			// -p pid only
+			param1(pid);
+		}
+	}
+	else if(choice == 1){
+		// -p pid -all
+		param1(pid);
+		param2();
+	}
+	else{
+		// -all -p pid
+		param2();
+		param1(pid);
+	}
     return 0;
 }
 
-static void __exit file_exit(void){
-    printk("Exiting");
-}
-
-
-module_init(file_init);
-module_exit(file_exit);
