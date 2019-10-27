@@ -6,6 +6,7 @@
 #include <asm/segment.h>
 #include <linux/buffer_head.h>
 #include <linux/string.h>
+#include <linux/syscalls.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("DEUCENG");
@@ -186,7 +187,7 @@ void param2(void){
     file_close(f);
 }
 
-SYSCALL_DEFINE2(sys_test,int,choice,char*,pid) { 
+SYSCALL_DEFINE2(test,int,choice,char*,pid) { 
 	cpuinfo();
 	if(choice == 0){
 		if(strncmp(pid,"0",1) == 0){
@@ -210,4 +211,3 @@ SYSCALL_DEFINE2(sys_test,int,choice,char*,pid) {
 	}
     return 0;
 }
-
