@@ -10,7 +10,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("DEUCENG");
-MODULE_DESCRIPTION("An example Linux kernel module.");
+MODULE_DESCRIPTION("System Information Kernel Module");
 MODULE_VERSION("0.01");
 
 struct file *file_open(const char *path, int flags, int rights) 
