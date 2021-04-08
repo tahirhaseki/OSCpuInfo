@@ -1,1 +1,1 @@
-obj-y := 2017510041.o
+obj-y := systeminfo.o
